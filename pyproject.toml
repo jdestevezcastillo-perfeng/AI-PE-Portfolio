@@ -1,7 +1,8 @@
 [project]
-name = "ai-perf-portfolio"
+name = "ai-pe-portfolio"
 version = "0.1.0"
 description = "Single-GPU AI performance engineering portfolio (benchmarks, RAG, observability, multi-GPU scaffold)"
+package-mode = false
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
