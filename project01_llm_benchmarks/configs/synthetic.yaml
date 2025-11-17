@@ -1,0 +1,9 @@
+task: "synthetic"
+model_name: "synthetic-llm"
+runs: 20
+prompt_length: 128
+generation_tokens: 64
+batch_size: 8
+exporter_port: null
+use_gpu: false
+notes: "CPU-safe synthetic benchmark; swap to real model later."
