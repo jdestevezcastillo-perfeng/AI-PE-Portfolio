@@ -1,7 +1,0 @@
-model_name: "gpt2"
-batch_size: 4
-runs: 10
-use_gpu: false
-devices: ["cuda:0", "cuda:1"]  # TODO tailor to available GPUs
-max_new_tokens: 32
-exporter_port: null
