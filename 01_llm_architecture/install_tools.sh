@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # 01_llm_architecture/install_tools.sh
 # Installs necessary tools for the LLM Architecture & Quantization module.
@@ -60,10 +60,10 @@ fi
 
 # 4. Install PyTorch
 echo "[*] Installing PyTorch for $GPU_TYPE..."
-if [ "$GPU_TYPE" == "NVIDIA" ]; then
+if [ "$GPU_TYPE" = "NVIDIA" ]; then
     # CUDA 12.1 (Adjust if needed)
     pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121
-elif [ "$GPU_TYPE" == "AMD" ]; then
+elif [ "$GPU_TYPE" = "AMD" ]; then
     # ROCm 6.0 (Adjust if needed)
     pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/rocm6.0
 else
@@ -77,15 +77,15 @@ pip install transformers accelerate datasets sentencepiece protobuf scipy
 
 # 6. Install llama.cpp (llama-cpp-python)
 echo "[*] Installing llama-cpp-python for $GPU_TYPE..."
-if [ "$GPU_TYPE" == "NVIDIA" ]; then
+if [ "$GPU_TYPE" = "NVIDIA" ]; then
     CMAKE_ARGS="-DGGML_CUDA=on" pip install llama-cpp-python --upgrade --force-reinstall --no-cache-dir
-elif [ "$GPU_TYPE" == "AMD" ]; then
+elif [ "$GPU_TYPE" = "AMD" ]; then
     # Find ROCm path
     ROCM_PATH=""
     if [ -d "/opt/rocm" ]; then
         ROCM_PATH="/opt/rocm"
-    elif ls -d /opt/rocm-* >/dev/null 2>&1; then
-        ROCM_PATH=$(ls -d /opt/rocm-* | head -n 1)
+    elif find /opt -maxdepth 1 -name "rocm-*" -print -quit | grep -q .; then
+        ROCM_PATH=$(find /opt -maxdepth 1 -name "rocm-*" -print -quit)
     fi
 
     if [ -n "$ROCM_PATH" ]; then
@@ -105,9 +105,9 @@ fi
 
 # 7. Install AutoGPTQ
 echo "[*] Installing AutoGPTQ for $GPU_TYPE..."
-if [ "$GPU_TYPE" == "NVIDIA" ]; then
+if [ "$GPU_TYPE" = "NVIDIA" ]; then
     pip install auto-gptq --no-build-isolation
-elif [ "$GPU_TYPE" == "AMD" ]; then
+elif [ "$GPU_TYPE" = "AMD" ]; then
     # AutoGPTQ on AMD can be tricky. Attempting standard install with ROCm torch present.
     echo "    Attempting AutoGPTQ install for ROCm (Experimental)..."
     if pip install auto-gptq --no-build-isolation; then
@@ -123,9 +123,9 @@ fi
 
 # 8. Install ExLlamaV2
 echo "[*] Installing ExLlamaV2..."
-if [ "$GPU_TYPE" == "NVIDIA" ]; then
+if [ "$GPU_TYPE" = "NVIDIA" ]; then
     pip install exllamav2
-elif [ "$GPU_TYPE" == "AMD" ]; then
+elif [ "$GPU_TYPE" = "AMD" ]; then
     echo "    [WARNING] ExLlamaV2 primarily targets CUDA. Skipping installation for AMD."
     echo "    If you have a specific ROCm fork, please install it manually."
 else

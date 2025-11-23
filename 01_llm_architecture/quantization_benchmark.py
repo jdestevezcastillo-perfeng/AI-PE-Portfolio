@@ -98,7 +98,9 @@ class GPUTelemetrySampler:
 
     def __init__(self, interval: float = 0.5):
         self.interval = interval
-        self.available = shutil.which("rocm-smi") is not None
+        self.rocm_available = shutil.which("rocm-smi") is not None
+        self.nvidia_available = shutil.which("nvidia-smi") is not None
+        self.available = self.rocm_available or self.nvidia_available
 
         self.baseline_vram: Optional[int] = None
         self.total_vram: Optional[int] = None
@@ -164,6 +166,42 @@ class GPUTelemetrySampler:
             time.sleep(self.interval)
 
     def _query_once(self) -> Optional[Dict[str, float]]:
+        if self.nvidia_available:
+            return self._query_nvidia()
+        elif self.rocm_available:
+            return self._query_rocm()
+        return None
+
+    def _query_nvidia(self) -> Optional[Dict[str, float]]:
+        try:
+            # Query utilization.gpu, memory.used, memory.total
+            result = subprocess.run(
+                ["nvidia-smi", "--query-gpu=utilization.gpu,memory.used,memory.total", "--format=csv,noheader,nounits"],
+                check=True,
+                capture_output=True,
+                text=True,
+            )
+            # Output format: "util, used, total" e.g. "10, 1024, 24576"
+            line = result.stdout.strip()
+            if not line:
+                return None
+            parts = [x.strip() for x in line.split(',')]
+            if len(parts) < 3:
+                return None
+            
+            gpu_pct = float(parts[0])
+            vram_used = int(parts[1]) * 1024 * 1024 # MB to Bytes
+            total_vram = int(parts[2]) * 1024 * 1024 # MB to Bytes
+            
+            return {
+                "gpu_pct": gpu_pct,
+                "vram_used": vram_used,
+                "vram_total": total_vram,
+            }
+        except (subprocess.CalledProcessError, ValueError, IndexError):
+            return None
+
+    def _query_rocm(self) -> Optional[Dict[str, float]]:
         try:
             result = subprocess.run(
                 ["rocm-smi", "--showmeminfo", "vram", "--showuse", "--json"],
@@ -320,7 +358,8 @@ def main() -> None:
     quantization = detect_quantization(args.model)
 
     telemetry: Any
-    if shutil.which("rocm-smi"):
+    telemetry: Any
+    if shutil.which("rocm-smi") or shutil.which("nvidia-smi"):
         telemetry = GPUTelemetrySampler(interval=0.5)
     else:
         telemetry = NullSampler()
