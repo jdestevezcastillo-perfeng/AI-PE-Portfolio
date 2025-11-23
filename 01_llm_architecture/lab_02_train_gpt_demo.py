@@ -40,8 +40,20 @@ model_cfg_dict = cfg["model"]
 # Override device if CUDA is available
 # >>> AIPE NOTE: Hardware Selection
 # This is the first check. An AIPE ensures 'cuda' (NVIDIA) or 'rocm' (AMD) is active.
+# Note: PyTorch uses the 'cuda' device string for both NVIDIA and AMD ROCm GPUs.
 # Fallback to 'cpu' is a performance catastrophe for training.
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
+print(f"Using device: {device}")
+if device == 'cuda':
+    print(f"GPU Name: {torch.cuda.get_device_name(0)}")
+    
+    # >>> AIPE NOTE: GPU Saturation
+    # The demo model is tiny (~40k params). A powerful GPU like a 6700 XT or 3090
+    # will be "starved" (idle) with a small batch size of 32.
+    # We increase the batch size massively to saturate the GPU cores and hide launch overhead.
+    print("Optimization: Increasing batch_size to 2048 for GPU saturation.")
+    train_cfg.batch_size = 2048
+
 torch.manual_seed(1337)
 
 # ==========================================
@@ -118,16 +130,38 @@ n = int(0.9*len(data))
 train_data = data[:n]
 val_data = data[n:]
 
+# >>> AIPE NOTE: Data Loading Optimization
+# For small datasets, move EVERYTHING to GPU VRAM upfront.
+# This eliminates the PCIe bottleneck of copying batches during the training loop.
+if device == 'cuda':
+    train_data = train_data.to(device)
+    val_data = val_data.to(device)
+
 def get_batch(split):
     """Generates a small batch of inputs (x) and targets (y)."""
     data = train_data if split == 'train' else val_data
-    ix = torch.randint(len(data) - model_cfg_dict["block_size"], (train_cfg.batch_size,))
-    x = torch.stack([data[i:i+model_cfg_dict["block_size"]] for i in ix])
-    y = torch.stack([data[i+1:i+model_cfg_dict["block_size"]+1] for i in ix])
-    # >>> AIPE NOTE: Data Loading Bottleneck
-    # Moving data to GPU (.to(device)) inside the training loop can block computation.
-    # Optimization: Use pinned_memory=True in DataLoader and prefetch data asynchronously.
-    x, y = x.to(device), y.to(device)
+    block_size = model_cfg_dict["block_size"]
+    batch_size = train_cfg.batch_size
+    
+    # >>> AIPE NOTE: Vectorization (Fixing the Sawtooth Pattern)
+    # The previous list comprehension `[data[i:i+block_size] for i in ix]` ran in Python on CPU.
+    # With batch_size=2048, this loop was too slow, causing the GPU to wait (spikes).
+    # We replace it with fully vectorized tensor operations:
+    
+    # 1. Generate random start indices directly on GPU
+    ix = torch.randint(len(data) - block_size, (batch_size,), device=device)
+    
+    # 2. Create a grid of offsets [0, 1, ..., block_size-1]
+    offsets = torch.arange(block_size, device=device)
+    
+    # 3. Create full index matrix [batch_size, block_size] via broadcasting
+    # ix: [B, 1] + offsets: [1, T] -> indices: [B, T]
+    indices = ix.unsqueeze(1) + offsets.unsqueeze(0)
+    
+    # 4. Gather data instantly using fancy indexing
+    x = data[indices]
+    y = data[indices + 1] # Targets are just shifted by 1
+    
     return x, y
 
 @torch.no_grad()

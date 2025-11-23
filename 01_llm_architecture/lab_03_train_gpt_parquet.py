@@ -52,7 +52,11 @@ torch.set_float32_matmul_precision('high')
 
 # >>> AIPE NOTE: Hardware Selection
 # Ensure we are using the GPU. Training GPT-2 on CPU is not feasible.
+# Note: PyTorch uses the 'cuda' device string for both NVIDIA and AMD ROCm GPUs.
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
+print(f"Using device: {device}")
+if device == 'cuda':
+    print(f"GPU Name: {torch.cuda.get_device_name(0)}")
 torch.manual_seed(1337)
 
 # ==========================================
