@@ -1,0 +1,96 @@
+# ==========================================
+# Promtail Configuration
+# AI Performance Engineering Observability
+# ==========================================
+# Ships logs to Loki from various sources
+
+server:
+  http_listen_port: 9080
+  grpc_listen_port: 0
+
+positions:
+  filename: /tmp/positions.yaml
+
+clients:
+  - url: http://loki:3100/loki/api/v1/push
+
+scrape_configs:
+  # ==========================================
+  # System logs
+  # ==========================================
+  - job_name: system
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          job: system
+          __path__: /var/log/syslog
+
+  # ==========================================
+  # Auth logs (security events)
+  # ==========================================
+  - job_name: auth
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          job: auth
+          __path__: /var/log/auth.log
+
+  # ==========================================
+  # Kernel logs
+  # ==========================================
+  - job_name: kern
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          job: kernel
+          __path__: /var/log/kern.log
+
+  # ==========================================
+  # Docker container logs
+  # ==========================================
+  - job_name: docker
+    docker_sd_configs:
+      - host: unix:///var/run/docker.sock
+        refresh_interval: 5s
+    relabel_configs:
+      - source_labels: ['__meta_docker_container_name']
+        regex: '/(.*)'
+        target_label: 'container'
+      - source_labels: ['__meta_docker_container_label_com_docker_compose_service']
+        target_label: 'service'
+      - source_labels: ['__meta_docker_container_label_com_docker_compose_project']
+        target_label: 'project'
+
+  # ==========================================
+  # Ollama service logs (if running via systemd)
+  # ==========================================
+  - job_name: ollama
+    journal:
+      max_age: 12h
+      labels:
+        job: ollama
+    relabel_configs:
+      - source_labels: ['__journal__systemd_unit']
+        regex: 'ollama.*'
+        action: keep
+    pipeline_stages:
+      - json:
+          expressions:
+            level: level
+            msg: msg
+      - labels:
+          level:
+
+  # ==========================================
+  # GPU/ROCm related logs
+  # ==========================================
+  - job_name: gpu
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          job: gpu
+          __path__: /var/log/rocm*.log

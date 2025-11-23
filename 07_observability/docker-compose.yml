@@ -1,0 +1,177 @@
+# ==========================================
+# AI Performance Engineering Observability Stack
+# ==========================================
+# Prometheus (metrics) + Loki (logs) + Tempo (traces) + Grafana (visualization)
+# Includes GPU monitoring for AMD ROCm
+
+services:
+  # ==========================================
+  # METRICS: Prometheus
+  # ==========================================
+  prometheus:
+    image: prom/prometheus:v2.48.0
+    container_name: prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--storage.tsdb.retention.time=15d'
+      - '--web.enable-lifecycle'
+      - '--web.enable-remote-write-receiver'
+    restart: unless-stopped
+    networks:
+      - observability
+
+  # ==========================================
+  # LOGS: Loki
+  # ==========================================
+  loki:
+    image: grafana/loki:2.9.2
+    container_name: loki
+    ports:
+      - "3100:3100"
+    volumes:
+      - ./loki/loki-config.yml:/etc/loki/local-config.yaml:ro
+      - loki_data:/loki
+    command: -config.file=/etc/loki/local-config.yaml
+    restart: unless-stopped
+    networks:
+      - observability
+
+  # ==========================================
+  # LOGS: Promtail (log shipper)
+  # ==========================================
+  promtail:
+    image: grafana/promtail:2.9.2
+    container_name: promtail
+    volumes:
+      - ./loki/promtail-config.yml:/etc/promtail/config.yml:ro
+      - /var/log:/var/log:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    command: -config.file=/etc/promtail/config.yml
+    restart: unless-stopped
+    networks:
+      - observability
+    depends_on:
+      - loki
+
+  # ==========================================
+  # TRACES: Tempo
+  # ==========================================
+  tempo:
+    image: grafana/tempo:2.3.1
+    container_name: tempo
+    ports:
+      - "3200:3200"   # Tempo query frontend
+      - "4317:4317"   # OTLP gRPC
+      - "4318:4318"   # OTLP HTTP
+      - "9411:9411"   # Zipkin
+    volumes:
+      - ./tempo/tempo-config.yml:/etc/tempo/tempo.yaml:ro
+      - tempo_data:/var/tempo
+    command: -config.file=/etc/tempo/tempo.yaml
+    restart: unless-stopped
+    networks:
+      - observability
+
+  # ==========================================
+  # VISUALIZATION: Grafana
+  # ==========================================
+  grafana:
+    image: grafana/grafana:10.2.2
+    container_name: grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_USERS_ALLOW_SIGN_UP=false
+      - GF_FEATURE_TOGGLES_ENABLE=traceqlEditor
+    volumes:
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./grafana/dashboards:/var/lib/grafana/dashboards:ro
+      - grafana_data:/var/lib/grafana
+    restart: unless-stopped
+    networks:
+      - observability
+    depends_on:
+      - prometheus
+      - loki
+      - tempo
+
+  # ==========================================
+  # EXPORTERS: Node Exporter (System Metrics)
+  # ==========================================
+  node-exporter:
+    image: prom/node-exporter:v1.7.0
+    container_name: node-exporter
+    ports:
+      - "9100:9100"
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+    command:
+      - '--path.procfs=/host/proc'
+      - '--path.sysfs=/host/sys'
+      - '--path.rootfs=/rootfs'
+      - '--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)'
+    restart: unless-stopped
+    networks:
+      - observability
+
+  # ==========================================
+  # EXPORTERS: ROCm GPU Exporter (AMD GPU)
+  # ==========================================
+  rocm-exporter:
+    build:
+      context: ./exporters
+      dockerfile: Dockerfile.rocm
+    container_name: rocm-exporter
+    ports:
+      - "9102:9102"
+    devices:
+      - /dev/kfd:/dev/kfd
+      - /dev/dri:/dev/dri
+    group_add:
+      - "44"    # video group
+      - "992"   # render group
+    volumes:
+      - /opt/rocm-6.3.0:/opt/rocm-6.3.0:ro
+    environment:
+      - ROCM_SMI_PATH=/opt/rocm-6.3.0/bin/rocm-smi
+    restart: unless-stopped
+    networks:
+      - observability
+
+  # ==========================================
+  # EXPORTERS: Ollama Exporter (LLM Metrics)
+  # ==========================================
+  ollama-exporter:
+    build:
+      context: ./exporters
+      dockerfile: Dockerfile.ollama
+    container_name: ollama-exporter
+    ports:
+      - "9103:9103"
+    environment:
+      - OLLAMA_HOST=http://host.docker.internal:11434
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    restart: unless-stopped
+    networks:
+      - observability
+
+networks:
+  observability:
+    driver: bridge
+
+volumes:
+  prometheus_data:
+  loki_data:
+  tempo_data:
+  grafana_data:

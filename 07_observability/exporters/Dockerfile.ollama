@@ -1,0 +1,10 @@
+FROM python:3.11-slim
+
+WORKDIR /app
+
+# No additional dependencies needed - using stdlib only
+COPY ollama_exporter.py .
+
+EXPOSE 9103
+
+CMD ["python", "ollama_exporter.py"]
