@@ -95,22 +95,22 @@ Comprehensive AMD GPU monitoring:
 
 ### ROCm Exporter (rocm_exporter.py)
 
-Exports AMD GPU metrics from `rocm-smi`:
+Exports AMD GPU metrics from **rocm-smi**:
 
 | Metric | Description |
 |--------|-------------|
-| `rocm_gpu_temperature_edge_celsius` | GPU edge temperature |
-| `rocm_gpu_temperature_junction_celsius` | Junction/hotspot temp (critical) |
-| `rocm_gpu_temperature_memory_celsius` | Memory temperature |
-| `rocm_gpu_utilization_percent` | GPU compute utilization |
-| `rocm_gpu_memory_utilization_percent` | Memory bandwidth utilization |
-| `rocm_gpu_power_watts` | Power consumption |
-| `rocm_gpu_vram_used_bytes` | VRAM used |
-| `rocm_gpu_vram_used_percent` | VRAM usage % |
-| `rocm_gpu_clock_graphics_mhz` | Graphics clock |
-| `rocm_gpu_clock_memory_mhz` | Memory clock |
-| `rocm_gpu_fan_speed_percent` | Fan speed |
-| `rocm_gpu_voltage_mv` | GPU voltage |
+| rocm_gpu_temperature_edge_celsius | GPU edge temperature |
+| rocm_gpu_temperature_junction_celsius | Junction/hotspot temp (critical) |
+| rocm_gpu_temperature_memory_celsius | Memory temperature |
+| rocm_gpu_utilization_percent | GPU compute utilization |
+| rocm_gpu_memory_utilization_percent | Memory bandwidth utilization |
+| rocm_gpu_power_watts | Power consumption |
+| rocm_gpu_vram_used_bytes | VRAM used |
+| rocm_gpu_vram_used_percent | VRAM usage % |
+| rocm_gpu_clock_graphics_mhz | Graphics clock |
+| rocm_gpu_clock_memory_mhz | Memory clock |
+| rocm_gpu_fan_speed_percent | Fan speed |
+| rocm_gpu_voltage_mv | GPU voltage |
 
 ### Ollama Exporter (ollama_exporter.py)
 
@@ -118,17 +118,17 @@ Exports LLM inference metrics:
 
 | Metric | Description |
 |--------|-------------|
-| `ollama_up` | Server status (1=up) |
-| `ollama_models_available` | Number of downloaded models |
-| `ollama_models_running` | Currently loaded models |
-| `ollama_model_vram_bytes` | Per-model VRAM usage |
-| `ollama_inference_tokens_per_second_avg` | Average throughput |
-| `ollama_inference_ttft_ms_avg` | Average time to first token |
-| `ollama_inference_tpot_ms_avg` | Average time per output token |
+| ollama_up | Server status (1=up) |
+| ollama_models_available | Number of downloaded models |
+| ollama_models_running | Currently loaded models |
+| ollama_model_vram_bytes | Per-model VRAM usage |
+| ollama_inference_tokens_per_second_avg | Average throughput |
+| ollama_inference_ttft_ms_avg | Average time to first token |
+| ollama_inference_tpot_ms_avg | Average time per output token |
 
 ## Recording Inference Metrics
 
-The Ollama exporter has a `/record` endpoint for your benchmark scripts:
+The Ollama exporter has a **/record** endpoint for your benchmark scripts:
 
 ```python
 import requests
@@ -142,7 +142,7 @@ response = requests.post('http://localhost:9103/record', json={
 })
 ```
 
-Integration with `lab_04_quantization_benchmark.py`:
+Integration with **lab_04_quantization_benchmark.py**:
 
 ```python
 # Add after each inference request
@@ -225,7 +225,7 @@ docker exec ollama-exporter curl http://host.docker.internal:11434/api/tags
 ### Grafana shows "No Data"
 
 1. Check Prometheus targets: http://localhost:9090/targets
-2. Verify exporters are healthy: `docker compose ps`
+2. Verify exporters are healthy: **docker compose ps**
 3. Check datasource configuration in Grafana
 
 ### Permission issues

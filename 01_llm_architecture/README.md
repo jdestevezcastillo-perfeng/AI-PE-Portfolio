@@ -26,9 +26,9 @@ Understand the fundamental building blocks of LLMs (Transformer architecture) an
 
 ### Steps
 
-1. Download `Llama-3-8B` in FP16 (Unquantized).
-2. Download `Llama-3-8B` in Q4_K_M (GGUF) and 4.0bpw (EXL2).
-3. Run the `lab_04_quantization_benchmark.py` script against all three.
+1. Download **Llama-3-8B** in FP16 (Unquantized).
+2. Download **Llama-3-8B** in Q4_K_M (GGUF) and 4.0bpw (EXL2).
+3. Run the **lab_04_quantization_benchmark.py** script against all three.
 4. **Challenge:** Calculate the "Tokens per Watt" efficiency for each.
 
 ## 📝 Deliverable
