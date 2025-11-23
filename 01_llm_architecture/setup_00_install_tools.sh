@@ -24,19 +24,20 @@ sudo apt install -y build-essential cmake git python3-venv
 
 # 2. Python Environment
 echo "[*] Setting up Python environment..."
-if [ -d ".venv" ]; then
-    echo "    Found existing .venv. verifying ownership..."
-    if [ ! -w ".venv" ]; then
-        echo "    Error: .venv exists but is not writable. It might be owned by root."
-        echo "    Please remove it: sudo rm -rf .venv"
-        exit 1
-    fi
+# Check for root .venv (one level up)
+if [ -d "../.venv" ]; then
+    echo "    Found root .venv at ../.venv"
+    source ../.venv/bin/activate
+elif [ -d ".venv" ]; then
+    # Fallback if user ran it from root or has a local venv
+    echo "    Found local .venv"
+    source .venv/bin/activate
 else
-    echo "    Creating .venv..."
-    python3 -m venv .venv
+    echo "    Error: No .venv found in root (../.venv) or local (.venv)."
+    echo "    Please create the root environment first: uv venv .venv (in project root)"
+    exit 1
 fi
 
-source .venv/bin/activate
 echo "    Upgrading pip..."
 pip install --upgrade pip
 
@@ -134,5 +135,5 @@ fi
 
 echo "================================================================="
 echo "   Installation Complete!"
-echo "   To use the tools, run: source .venv/bin/activate"
+echo "   To use the tools, run: source ../.venv/bin/activate"
 echo "================================================================="

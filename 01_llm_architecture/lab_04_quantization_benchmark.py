@@ -1,13 +1,26 @@
+
 """
-Quantization Benchmark Script
+BENCHMARK PIPELINE DIAGRAM
+--------------------------
 
-Runs a short benchmark against an Ollama-served model while capturing:
-- End-to-end latency
-- Tokens/sec (decode)
-- Time-to-first-token (TTFT)
-- GPU telemetry via rocm-smi (VRAM + utilization)
-
-Use this to compare multiple quantization variants of the same base model.
+   [Benchmark Config]  (Model, Prompt, Requests)
+          |
+          v
+   [Telemetry Sampler] (Background Thread)
+      |   |   |        - Polls nvidia-smi / rocm-smi
+      |   |   |        - Tracks VRAM & GPU Util
+      v   v   v
+   [Inference Loop]    (Sequential Requests)
+          |
+          v
+      [Ollama API]     (HTTP POST /api/generate)
+          |            - TTFT (Time To First Token)
+          |            - TPS (Tokens Per Second)
+          v
+   [Results Aggregator] (JSON Report)
+          |
+          v
+      [Output File]    (quantization_benchmark_*.json)
 """
 
 from __future__ import annotations
@@ -26,8 +39,25 @@ from typing import Any, Dict, List, Optional
 import requests
 import shutil
 
+# ==========================================
+# 1. CONFIGURATION & SETUP
+# ==========================================
+
 OLLAMA_API_URL = os.environ.get("OLLAMA_API_URL", "http://localhost:11434/api/generate")
 
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description="Benchmark an Ollama model with GPU telemetry.")
+    parser.add_argument("--model", default="llama3.1:8b", help="Model name registered with Ollama.")
+    parser.add_argument("--prompt", default="Explain how quantization affects LLM inference performance.", help="Prompt to benchmark.")
+    parser.add_argument("--requests", type=int, default=5, help="Number of sequential requests to run.")
+    parser.add_argument("--temperature", type=float, default=0.7, help="Sampling temperature.")
+    parser.add_argument("--timeout", type=int, default=180, help="Request timeout seconds.")
+    parser.add_argument("--output", help="Optional output JSON path.")
+    return parser.parse_args()
+
+# ==========================================
+# 2. UTILITIES (Quantization Detection)
+# ==========================================
 
 def detect_quantization(model: str) -> Optional[str]:
     """Best-effort parse of the quantization level from `ollama show` output."""
@@ -67,33 +97,35 @@ def calc_stats(values: List[float]) -> Dict[str, float]:
 
     return summary
 
+def sanitize_filename(value: str) -> str:
+    safe = "".join(c if c.isalnum() or c in ("-", "_") else "_" for c in value)
+    return safe.strip("_") or "model"
+
+def bytes_to_gib(value: Optional[int]) -> Optional[float]:
+    if value is None:
+        return None
+    return value / (1024 ** 3)
+
+# ==========================================
+# 3. TELEMETRY (GPU Monitoring)
+# ==========================================
 
 class NullSampler:
     """Fallback sampler when rocm-smi is unavailable."""
-
-    def start(self) -> None:
-        pass
-
-    def stop(self) -> None:
-        pass
-
-    def activate(self) -> None:
-        pass
-
-    def deactivate(self) -> None:
-        pass
-
-    def summary(self) -> Dict[str, Any]:
-        return {
-            "available": False,
-        }
-
+    def start(self) -> None: pass
+    def stop(self) -> None: pass
+    def activate(self) -> None: pass
+    def deactivate(self) -> None: pass
+    def summary(self) -> Dict[str, Any]: return {"available": False}
 
 class GPUTelemetrySampler:
     """
-    Samples GPU utilization and VRAM usage via rocm-smi.
-
-    Only records samples while `activate()` has been called so we avoid idle data.
+    Samples GPU utilization and VRAM usage via rocm-smi or nvidia-smi.
+    
+    >>> AIPE NOTE: Observability
+    This class implements a sidecar pattern for monitoring. It runs in a separate thread
+    to avoid blocking the main inference loop, providing real-time visibility into
+    hardware saturation (Compute vs Memory Bound).
     """
 
     def __init__(self, interval: float = 0.5):
@@ -181,22 +213,15 @@ class GPUTelemetrySampler:
                 capture_output=True,
                 text=True,
             )
-            # Output format: "util, used, total" e.g. "10, 1024, 24576"
             line = result.stdout.strip()
-            if not line:
-                return None
+            if not line: return None
             parts = [x.strip() for x in line.split(',')]
-            if len(parts) < 3:
-                return None
-            
-            gpu_pct = float(parts[0])
-            vram_used = int(parts[1]) * 1024 * 1024 # MB to Bytes
-            total_vram = int(parts[2]) * 1024 * 1024 # MB to Bytes
+            if len(parts) < 3: return None
             
             return {
-                "gpu_pct": gpu_pct,
-                "vram_used": vram_used,
-                "vram_total": total_vram,
+                "gpu_pct": float(parts[0]),
+                "vram_used": int(parts[1]) * 1024 * 1024, # MB to Bytes
+                "vram_total": int(parts[2]) * 1024 * 1024, # MB to Bytes
             }
         except (subprocess.CalledProcessError, ValueError, IndexError):
             return None
@@ -205,38 +230,26 @@ class GPUTelemetrySampler:
         try:
             result = subprocess.run(
                 ["rocm-smi", "--showmeminfo", "vram", "--showuse", "--json"],
-                check=True,
-                capture_output=True,
-                text=True,
+                check=True, capture_output=True, text=True,
             )
         except (subprocess.CalledProcessError, FileNotFoundError):
             return None
 
         output = result.stdout.strip()
-        if not output:
-            return None
+        if not output: return None
 
         try:
             data = json.loads(output)
-        except json.JSONDecodeError:
+            card = next(iter(data.values()), None)
+            if not card: return None
+            
+            return {
+                "gpu_pct": float(card.get("GPU use (%)", "0").strip("%")),
+                "vram_used": int(card.get("VRAM Total Used Memory (B)", "0")),
+                "vram_total": int(card.get("VRAM Total Memory (B)", "0")),
+            }
+        except (json.JSONDecodeError, ValueError, AttributeError):
             return None
-
-        card = next(iter(data.values()), None)
-        if not card:
-            return None
-
-        try:
-            gpu_pct = float(card.get("GPU use (%)", "0").strip("%"))
-            vram_used = int(card.get("VRAM Total Used Memory (B)", "0"))
-            total_vram = int(card.get("VRAM Total Memory (B)", "0"))
-        except (ValueError, AttributeError):
-            return None
-
-        return {
-            "gpu_pct": gpu_pct,
-            "vram_used": vram_used,
-            "vram_total": total_vram,
-        }
 
     def summary(self) -> Dict[str, Any]:
         if not self.available:
@@ -262,12 +275,9 @@ class GPUTelemetrySampler:
             "total_vram_bytes": self.total_vram,
         }
 
-
-def bytes_to_gib(value: Optional[int]) -> Optional[float]:
-    if value is None:
-        return None
-    return value / (1024 ** 3)
-
+# ==========================================
+# 4. INFERENCE LOOP
+# ==========================================
 
 def run_single_request(model: str, prompt: str, sampler: Any, temperature: float, timeout: int) -> Dict[str, Any]:
     payload = {
@@ -284,6 +294,9 @@ def run_single_request(model: str, prompt: str, sampler: Any, temperature: float
     start = time.time()
 
     try:
+        # >>> AIPE NOTE: Latency Measurement
+        # We measure "Client-Side Latency" here. This includes Network RTT + Server Queue + Inference Time.
+        # For pure model benchmarking, server-side metrics (TTFT, TPOT) are more accurate.
         response = requests.post(OLLAMA_API_URL, json=payload, timeout=timeout)
         response.raise_for_status()
         result = response.json()
@@ -319,7 +332,6 @@ def run_single_request(model: str, prompt: str, sampler: Any, temperature: float
     finally:
         sampler.deactivate()
 
-
 def aggregate_results(records: List[Dict[str, Any]]) -> Dict[str, Any]:
     successful = [r for r in records if r.get("success")]
     latencies = [r["latency_seconds"] for r in successful]
@@ -335,29 +347,15 @@ def aggregate_results(records: List[Dict[str, Any]]) -> Dict[str, Any]:
         "avg_tokens_generated": statistics.mean([r["tokens_generated"] for r in successful]) if successful else 0,
     }
 
-
-def sanitize_filename(value: str) -> str:
-    safe = "".join(c if c.isalnum() or c in ("-", "_") else "_" for c in value)
-    return safe.strip("_") or "model"
-
-
-def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Benchmark an Ollama model with GPU telemetry.")
-    parser.add_argument("--model", default="llama3.1:8b", help="Model name registered with Ollama.")
-    parser.add_argument("--prompt", default="Explain how quantization affects LLM inference performance.", help="Prompt to benchmark.")
-    parser.add_argument("--requests", type=int, default=5, help="Number of sequential requests to run.")
-    parser.add_argument("--temperature", type=float, default=0.7, help="Sampling temperature.")
-    parser.add_argument("--timeout", type=int, default=180, help="Request timeout seconds.")
-    parser.add_argument("--output", help="Optional output JSON path.")
-    return parser.parse_args()
-
+# ==========================================
+# 5. MAIN EXECUTION
+# ==========================================
 
 def main() -> None:
     args = parse_args()
 
     quantization = detect_quantization(args.model)
 
-    telemetry: Any
     telemetry: Any
     if shutil.which("rocm-smi") or shutil.which("nvidia-smi"):
         telemetry = GPUTelemetrySampler(interval=0.5)
@@ -415,3 +413,4 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
+

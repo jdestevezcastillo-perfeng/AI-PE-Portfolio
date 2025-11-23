@@ -1,32 +1,41 @@
+"""
+TRANSFORMER INSPECTION DIAGRAM
+------------------------------
+
+   [Hugging Face Hub] -> [AutoModel.from_pretrained("gpt2")]
+          |
+          v
+   [Model Config]     (n_embd=768, n_head=12, n_layer=12)
+          |
+          v
+   [Transformer Block] (Repeated 12x)
+          |
+          +-- [LayerNorm 1] -> [Self-Attention] (Q, K, V)
+          |       ^                   |
+          |       |                   v
+          |    (Residual) <-----------+
+          |
+          +-- [LayerNorm 2] -> [MLP] (Up 4x -> Act -> Down)
+                  ^                   |
+                  |                   v
+               (Residual) <-----------+
+"""
+
 import torch
 from transformers import AutoModel
 
-"""
-LIBRARY EXPLAINER:
-------------------
-1. WHAT IS PYTORCH (`torch`)?
-   You guessed right! At its core, PyTorch is a library for multiplying matrices (called "Tensors").
-   But it has two "superpowers" that make it better than NumPy for AI:
-   
-   a. GPU Acceleration: 
-      Standard arrays (NumPy) live on the CPU. PyTorch Tensors can live on the GPU (NVIDIA/AMD).
-      This makes matrix multiplication 100x-1000x faster, which is essential for Deep Learning.
-      
-   b. Autograd (Automatic Differentiation):
-      PyTorch keeps a history of every math operation you do.
-      If you multiply A * B = C, PyTorch remembers that.
-      This allows it to automatically calculate "gradients" (how much to change A and B to improve C)
-      during training. This is the "magic" behind backpropagation.
-
-2. WHAT IS TRANSFORMERS (`transformers`)?
-   Created by Hugging Face, this is a high-level library built ON TOP of PyTorch.
-   Instead of writing the matrix math for "Self-Attention" from scratch every time,
-   you just say `AutoModel.from_pretrained("gpt2")`, and it:
-   
-   a. Downloads the architecture code (the class definitions).
-   b. Downloads the pre-trained weights (the gigabytes of numbers learned by reading the internet).
-   c. Loads them into valid PyTorch objects ready for use.
-"""
+# ==========================================
+# 1. LIBRARY EXPLAINER
+# ==========================================
+# 1. WHAT IS PYTORCH (`torch`)?
+#    At its core, PyTorch is a library for multiplying matrices (called "Tensors").
+#    Superpowers:
+#    a. GPU Acceleration: Tensors live on GPU (100x faster than CPU).
+#    b. Autograd: Keeps history of operations for automatic backpropagation.
+#
+# 2. WHAT IS TRANSFORMERS (`transformers`)?
+#    Built ON TOP of PyTorch. Instead of writing matrix math from scratch,
+#    you load pre-defined architectures and weights.
 
 def inspect_gpt2():
     print("Loading GPT-2 model...")
@@ -34,6 +43,11 @@ def inspect_gpt2():
     model = AutoModel.from_pretrained("gpt2")
     
     config = model.config
+    
+    # ==========================================
+    # 2. ARCHITECTURE OVERVIEW
+    # ==========================================
+    
     print("\n" + "="*50)
     print("   GPT-2 ARCHITECTURE INSPECTION (Systems View)")
     print("="*50)
@@ -47,6 +61,10 @@ def inspect_gpt2():
     
     # Grab the first transformer block (h[0])
     block = model.h[0]
+    
+    # ==========================================
+    # 3. BLOCK INSPECTION
+    # ==========================================
     
     print("\n" + "-"*50)
     print("   INSIDE A SINGLE TRANSFORMER BLOCK (Layer 0)")
@@ -69,6 +87,10 @@ def inspect_gpt2():
     print(f"    a. QKV Projection (c_attn):")
     print(f"       Shape: {qkv_weight_shape}")
     print(f"       Logic: Input ({qkv_weight_shape[0]}) -> Output ({qkv_weight_shape[1]})")
+    
+    # >>> AIPE NOTE: Compute Intensity
+    # This projection is a large Matrix-Matrix multiplication (GEMM).
+    # It is compute-bound on the GPU.
     print(f"       Why 3x? We generate Query, Key, and Value vectors simultaneously.")
     print(f"       Calculation: {config.n_embd} * 3 = {config.n_embd * 3}")
     
@@ -105,6 +127,10 @@ def inspect_gpt2():
     print(f"    Total MLP Params: {mlp_params:,}")
     print(f"    (Notice: MLP is usually ~2x larger than Attention!)")
     
+    # ==========================================
+    # 4. MEMORY ANALYSIS
+    # ==========================================
+    
     # Totals
     total_block_params = ln_1_params + attn_params + ln_2_params + mlp_params
     print("\n" + "-"*50)
@@ -117,6 +143,9 @@ def inspect_gpt2():
     mem_fp16 = total_block_params * 2 / (1024 * 1024)
     mem_int8 = total_block_params * 1 / (1024 * 1024)
     
+    # >>> AIPE NOTE: Quantization Savings
+    # This clearly demonstrates why we quantize. Going from FP32 to INT8 cuts memory by 4x.
+    # This allows running larger models on smaller GPUs (e.g., 70B on 2x3090s).
     print(f"Memory Usage (Weights Only):")
     print(f"  FP32 (Standard Training):   {mem_fp32:.2f} MB")
     print(f"  FP16 (Standard Inference):  {mem_fp16:.2f} MB")
