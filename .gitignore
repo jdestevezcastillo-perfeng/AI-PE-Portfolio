@@ -4,4 +4,7 @@
 archive/
 data/
 hf-token.txt 
-venv/   
+venv/  
+observability/
+Dataset/
+fix_git_repo.sh
