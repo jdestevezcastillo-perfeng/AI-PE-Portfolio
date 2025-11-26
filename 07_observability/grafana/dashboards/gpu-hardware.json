@@ -50,94 +50,12 @@
       "targets": [
         {
           "datasource": { "type": "prometheus", "uid": "${datasource}" },
-          "expr": "rocm_gpu_temperature_edge_celsius{gpu=\"0\"}",
-          "legendFormat": "Edge",
+          "expr": "DCGM_FI_DEV_GPU_TEMP{gpu=\"0\"}",
+          "legendFormat": "GPU Temp",
           "refId": "A"
         }
       ],
-      "title": "Edge Temperature",
-      "type": "gauge"
-    },
-    {
-      "datasource": { "type": "prometheus", "uid": "${datasource}" },
-      "fieldConfig": {
-        "defaults": {
-          "color": { "mode": "thresholds" },
-          "mappings": [],
-          "max": 120,
-          "min": 0,
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              { "color": "green", "value": null },
-              { "color": "#EAB839", "value": 85 },
-              { "color": "orange", "value": 95 },
-              { "color": "red", "value": 105 }
-            ]
-          },
-          "unit": "celsius"
-        },
-        "overrides": []
-      },
-      "gridPos": { "h": 6, "w": 6, "x": 6, "y": 1 },
-      "id": 2,
-      "options": {
-        "orientation": "auto",
-        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
-        "showThresholdLabels": false,
-        "showThresholdMarkers": true
-      },
-      "pluginVersion": "10.2.2",
-      "targets": [
-        {
-          "datasource": { "type": "prometheus", "uid": "${datasource}" },
-          "expr": "rocm_gpu_temperature_junction_celsius{gpu=\"0\"}",
-          "legendFormat": "Junction/Hotspot",
-          "refId": "A"
-        }
-      ],
-      "title": "Junction/Hotspot Temperature",
-      "type": "gauge"
-    },
-    {
-      "datasource": { "type": "prometheus", "uid": "${datasource}" },
-      "fieldConfig": {
-        "defaults": {
-          "color": { "mode": "thresholds" },
-          "mappings": [],
-          "max": 100,
-          "min": 0,
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              { "color": "green", "value": null },
-              { "color": "#EAB839", "value": 75 },
-              { "color": "orange", "value": 85 },
-              { "color": "red", "value": 95 }
-            ]
-          },
-          "unit": "celsius"
-        },
-        "overrides": []
-      },
-      "gridPos": { "h": 6, "w": 6, "x": 12, "y": 1 },
-      "id": 3,
-      "options": {
-        "orientation": "auto",
-        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
-        "showThresholdLabels": false,
-        "showThresholdMarkers": true
-      },
-      "pluginVersion": "10.2.2",
-      "targets": [
-        {
-          "datasource": { "type": "prometheus", "uid": "${datasource}" },
-          "expr": "rocm_gpu_temperature_memory_celsius{gpu=\"0\"}",
-          "legendFormat": "Memory",
-          "refId": "A"
-        }
-      ],
-      "title": "Memory Temperature",
+      "title": "GPU Temperature",
       "type": "gauge"
     },
     {
@@ -176,7 +94,7 @@
         },
         "overrides": []
       },
-      "gridPos": { "h": 6, "w": 6, "x": 18, "y": 1 },
+      "gridPos": { "h": 6, "w": 12, "x": 12, "y": 1 },
       "id": 4,
       "options": {
         "legend": { "calcs": ["mean", "max"], "displayMode": "table", "placement": "bottom", "showLegend": true },
@@ -186,21 +104,9 @@
       "targets": [
         {
           "datasource": { "type": "prometheus", "uid": "${datasource}" },
-          "expr": "rocm_gpu_temperature_edge_celsius{gpu=\"0\"}",
-          "legendFormat": "Edge",
+          "expr": "DCGM_FI_DEV_GPU_TEMP{gpu=\"0\"}",
+          "legendFormat": "GPU Temp",
           "refId": "A"
-        },
-        {
-          "datasource": { "type": "prometheus", "uid": "${datasource}" },
-          "expr": "rocm_gpu_temperature_junction_celsius{gpu=\"0\"}",
-          "legendFormat": "Hotspot",
-          "refId": "B"
-        },
-        {
-          "datasource": { "type": "prometheus", "uid": "${datasource}" },
-          "expr": "rocm_gpu_temperature_memory_celsius{gpu=\"0\"}",
-          "legendFormat": "Memory",
-          "refId": "C"
         }
       ],
       "title": "Temperature History",
@@ -247,7 +153,7 @@
       "targets": [
         {
           "datasource": { "type": "prometheus", "uid": "${datasource}" },
-          "expr": "rocm_gpu_utilization_percent{gpu=\"0\"}",
+          "expr": "DCGM_FI_DEV_GPU_UTIL{gpu=\"0\"}",
           "legendFormat": "GPU",
           "refId": "A"
         }
@@ -288,12 +194,12 @@
       "targets": [
         {
           "datasource": { "type": "prometheus", "uid": "${datasource}" },
-          "expr": "rocm_gpu_memory_utilization_percent{gpu=\"0\"}",
-          "legendFormat": "Memory BW",
+          "expr": "DCGM_FI_DEV_MEM_COPY_UTIL{gpu=\"0\"}",
+          "legendFormat": "Memory Copy",
           "refId": "A"
         }
       ],
-      "title": "Memory Bandwidth Utilization",
+      "title": "Memory Copy Utilization",
       "type": "gauge"
     },
     {
@@ -302,15 +208,15 @@
         "defaults": {
           "color": { "mode": "thresholds" },
           "mappings": [],
-          "max": 250,
+          "max": 400,
           "min": 0,
           "thresholds": {
             "mode": "absolute",
             "steps": [
               { "color": "green", "value": null },
-              { "color": "#EAB839", "value": 150 },
-              { "color": "orange", "value": 180 },
-              { "color": "red", "value": 200 }
+              { "color": "#EAB839", "value": 250 },
+              { "color": "orange", "value": 300 },
+              { "color": "red", "value": 350 }
             ]
           },
           "unit": "watt"
@@ -329,7 +235,7 @@
       "targets": [
         {
           "datasource": { "type": "prometheus", "uid": "${datasource}" },
-          "expr": "rocm_gpu_power_watts{gpu=\"0\"}",
+          "expr": "DCGM_FI_DEV_POWER_USAGE{gpu=\"0\"}",
           "legendFormat": "Power",
           "refId": "A"
         }
@@ -382,13 +288,13 @@
       "targets": [
         {
           "datasource": { "type": "prometheus", "uid": "${datasource}" },
-          "expr": "rocm_gpu_utilization_percent{gpu=\"0\"}",
+          "expr": "DCGM_FI_DEV_GPU_UTIL{gpu=\"0\"}",
           "legendFormat": "GPU %",
           "refId": "A"
         },
         {
           "datasource": { "type": "prometheus", "uid": "${datasource}" },
-          "expr": "rocm_gpu_power_watts{gpu=\"0\"}",
+          "expr": "DCGM_FI_DEV_POWER_USAGE{gpu=\"0\"}",
           "legendFormat": "Power",
           "refId": "B"
         }
@@ -410,18 +316,18 @@
         "defaults": {
           "color": { "mode": "thresholds" },
           "mappings": [],
-          "max": 12,
+          "max": 25769803776,
           "min": 0,
           "thresholds": {
             "mode": "absolute",
             "steps": [
               { "color": "green", "value": null },
-              { "color": "#EAB839", "value": 8 },
-              { "color": "orange", "value": 10 },
-              { "color": "red", "value": 11 }
+              { "color": "#EAB839", "value": 17179869184 },
+              { "color": "orange", "value": 21474836480 },
+              { "color": "red", "value": 24696061952 }
             ]
           },
-          "unit": "decgbytes"
+          "unit": "bytes"
         },
         "overrides": []
       },
@@ -437,7 +343,7 @@
       "targets": [
         {
           "datasource": { "type": "prometheus", "uid": "${datasource}" },
-          "expr": "rocm_gpu_vram_used_gb{gpu=\"0\"}",
+          "expr": "DCGM_FI_DEV_FB_USED{gpu=\"0\"} * 1048576",
           "legendFormat": "Used",
           "refId": "A"
         }
@@ -478,7 +384,7 @@
       "targets": [
         {
           "datasource": { "type": "prometheus", "uid": "${datasource}" },
-          "expr": "rocm_gpu_vram_used_percent{gpu=\"0\"}",
+          "expr": "(DCGM_FI_DEV_FB_USED{gpu=\"0\"} / (DCGM_FI_DEV_FB_USED{gpu=\"0\"} + DCGM_FI_DEV_FB_FREE{gpu=\"0\"})) * 100",
           "legendFormat": "VRAM %",
           "refId": "A"
         }
@@ -498,7 +404,7 @@
             "axisPlacement": "auto",
             "barAlignment": 0,
             "drawStyle": "line",
-            "fillOpacity": 20,
+            "fillOpacity": 10,
             "gradientMode": "none",
             "hideFrom": { "legend": false, "tooltip": false, "viz": false },
             "lineInterpolation": "smooth",
@@ -512,7 +418,7 @@
           },
           "mappings": [],
           "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }] },
-          "unit": "decgbytes"
+          "unit": "bytes"
         },
         "overrides": []
       },
@@ -526,13 +432,13 @@
       "targets": [
         {
           "datasource": { "type": "prometheus", "uid": "${datasource}" },
-          "expr": "rocm_gpu_vram_used_gb{gpu=\"0\"}",
+          "expr": "DCGM_FI_DEV_FB_USED{gpu=\"0\"} * 1048576",
           "legendFormat": "Used",
           "refId": "A"
         },
         {
           "datasource": { "type": "prometheus", "uid": "${datasource}" },
-          "expr": "rocm_gpu_vram_total_gb{gpu=\"0\"}",
+          "expr": "(DCGM_FI_DEV_FB_USED{gpu=\"0\"} + DCGM_FI_DEV_FB_FREE{gpu=\"0\"}) * 1048576",
           "legendFormat": "Total",
           "refId": "B"
         }
@@ -566,11 +472,11 @@
           },
           "mappings": [],
           "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }] },
-          "unit": "rotmhz"
+          "unit": "hertz"
         },
         "overrides": []
       },
-      "gridPos": { "h": 6, "w": 12, "x": 0, "y": 21 },
+      "gridPos": { "h": 6, "w": 24, "x": 0, "y": 21 },
       "id": 12,
       "options": {
         "legend": { "calcs": ["mean", "max"], "displayMode": "table", "placement": "bottom", "showLegend": true },
@@ -580,84 +486,25 @@
       "targets": [
         {
           "datasource": { "type": "prometheus", "uid": "${datasource}" },
-          "expr": "rocm_gpu_clock_graphics_mhz{gpu=\"0\"}",
-          "legendFormat": "Graphics Clock",
+          "expr": "DCGM_FI_DEV_SM_CLOCK{gpu=\"0\"} * 1000000",
+          "legendFormat": "SM Clock",
           "refId": "A"
         },
         {
           "datasource": { "type": "prometheus", "uid": "${datasource}" },
-          "expr": "rocm_gpu_clock_memory_mhz{gpu=\"0\"}",
+          "expr": "DCGM_FI_DEV_MEM_CLOCK{gpu=\"0\"} * 1000000",
           "legendFormat": "Memory Clock",
           "refId": "B"
         }
       ],
       "title": "Clock Frequencies",
       "type": "timeseries"
-    },
-    {
-      "datasource": { "type": "prometheus", "uid": "${datasource}" },
-      "fieldConfig": {
-        "defaults": {
-          "color": { "mode": "palette-classic" },
-          "custom": {
-            "axisCenteredZero": false,
-            "axisColorMode": "text",
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
-            "drawStyle": "line",
-            "fillOpacity": 10,
-            "gradientMode": "none",
-            "hideFrom": { "legend": false, "tooltip": false, "viz": false },
-            "lineInterpolation": "smooth",
-            "lineWidth": 2,
-            "pointSize": 5,
-            "scaleDistribution": { "type": "linear" },
-            "showPoints": "never",
-            "spanNulls": false,
-            "stacking": { "group": "A", "mode": "none" },
-            "thresholdsStyle": { "mode": "off" }
-          },
-          "mappings": [],
-          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }] },
-          "unit": "percent"
-        },
-        "overrides": [
-          {
-            "matcher": { "id": "byName", "options": "Voltage" },
-            "properties": [{ "id": "unit", "value": "mvolt" }, { "id": "custom.axisPlacement", "value": "right" }]
-          }
-        ]
-      },
-      "gridPos": { "h": 6, "w": 12, "x": 12, "y": 21 },
-      "id": 13,
-      "options": {
-        "legend": { "calcs": ["mean", "max"], "displayMode": "table", "placement": "bottom", "showLegend": true },
-        "tooltip": { "mode": "multi", "sort": "none" }
-      },
-      "pluginVersion": "10.2.2",
-      "targets": [
-        {
-          "datasource": { "type": "prometheus", "uid": "${datasource}" },
-          "expr": "rocm_gpu_fan_speed_percent{gpu=\"0\"}",
-          "legendFormat": "Fan %",
-          "refId": "A"
-        },
-        {
-          "datasource": { "type": "prometheus", "uid": "${datasource}" },
-          "expr": "rocm_gpu_voltage_mv{gpu=\"0\"}",
-          "legendFormat": "Voltage",
-          "refId": "B"
-        }
-      ],
-      "title": "Fan & Voltage",
-      "type": "timeseries"
     }
   ],
   "refresh": "5s",
   "schemaVersion": 38,
   "style": "dark",
-  "tags": ["gpu", "rocm", "amd", "hardware"],
+  "tags": ["gpu", "nvidia", "hardware"],
   "templating": {
     "list": [
       {
@@ -678,8 +525,8 @@
   "time": { "from": "now-15m", "to": "now" },
   "timepicker": {},
   "timezone": "",
-  "title": "GPU Hardware Monitoring",
+  "title": "GPU Hardware Monitoring (NVIDIA)",
   "uid": "gpu-hardware",
-  "version": 1,
+  "version": 2,
   "weekStart": ""
 }

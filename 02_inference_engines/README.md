@@ -1,31 +1,36 @@
 # Module 02: Inference Engines
 
 ## 🎯 Objective
-Compare the leading inference engines to understand their architecture, strengths, and weaknesses. Not all engines are created equal.
+
+Move beyond simple PyTorch execution and master high-performance inference engines designed for production. We will explore how specialized engines optimize memory management (PagedAttention), batching (Continuous Batching), and kernel execution to deliver orders of magnitude faster inference.
 
 ## 📚 Concepts
-1.  **Continuous Batching:** How engines process multiple requests at different stages of generation simultaneously.
-2.  **PagedAttention (vLLM):** Managing KV Cache like virtual memory pages to eliminate fragmentation.
-3.  **Tensor Parallelism:** Splitting a model across multiple GPUs (if you had them).
+
+1. **PagedAttention (vLLM):** Solving the memory fragmentation problem in KV caches.
+2. **Continuous Batching:** How to batch requests dynamically without waiting for all to finish.
+3. **Tensor Parallelism:** Splitting large models across multiple GPUs (introductory).
+4. **Speculative Decoding:** Using a small model to draft tokens for a large model.
 
 ## 🛠️ Tools to Master
-- **vLLM:** The industry standard for high-throughput serving.
-- **TGI (Text Generation Inference):** HuggingFace's production server (Rust-based).
-- **Ollama:** The developer-friendly local wrapper (built on llama.cpp).
 
-## 🧪 Lab: Engine Shootout
-**Goal:** Benchmark vLLM vs Ollama.
+- **vLLM:** The current state-of-the-art for high-throughput serving.
+- **Text Generation Inference (TGI):** Hugging Face's production-ready inference server.
+- **TensorRT-LLM:** NVIDIA's highly optimized inference library (optional/advanced).
 
-### Steps:
-1.  Set up vLLM to serve `Llama-3-8B`.
-2.  Set up Ollama to serve `Llama-3-8B`.
-3.  Send a **single** request to both. Record latency.
-4.  Send **10 concurrent** requests to both. Record latency and throughput.
-5.  **Observation:** Watch how vLLM maintains higher throughput under load compared to Ollama (which may queue requests depending on config).
+## 🧪 Labs
 
-## 📝 Deliverable
-A "Battle Card" table comparing vLLM and Ollama on:
-- Ease of Setup
-- Single-stream Latency
-- Max Concurrent Throughput
-- VRAM Overhead
+### Lab 01: Baseline Inference
+
+Establish a baseline using standard Hugging Face `transformers` pipelines. We need to know what "slow" looks like to appreciate "fast".
+
+### Lab 02: vLLM Integration
+
+Set up vLLM and run inference. We will measure Time to First Token (TTFT) and Inter-Token Latency (ITL).
+
+### Lab 03: TGI Setup
+
+Deploy TGI (via Docker) and interact with its API.
+
+### Lab 04: Benchmarking Suite
+
+A unified script to hammer our endpoints and generate a comparative report on throughput and latency.

@@ -17,14 +17,16 @@ services:
       - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
       - prometheus_data:/prometheus
     command:
-      - '--config.file=/etc/prometheus/prometheus.yml'
-      - '--storage.tsdb.path=/prometheus'
-      - '--storage.tsdb.retention.time=15d'
-      - '--web.enable-lifecycle'
-      - '--web.enable-remote-write-receiver'
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.path=/prometheus"
+      - "--storage.tsdb.retention.time=15d"
+      - "--web.enable-lifecycle"
+      - "--web.enable-remote-write-receiver"
     restart: unless-stopped
     networks:
       - observability
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
 
   # ==========================================
   # LOGS: Loki
@@ -66,10 +68,10 @@ services:
     image: grafana/tempo:2.3.1
     container_name: tempo
     ports:
-      - "3200:3200"   # Tempo query frontend
-      - "4317:4317"   # OTLP gRPC
-      - "4318:4318"   # OTLP HTTP
-      - "9411:9411"   # Zipkin
+      - "3200:3200" # Tempo query frontend
+      - "4317:4317" # OTLP gRPC
+      - "4318:4318" # OTLP HTTP
+      - "9411:9411" # Zipkin
     volumes:
       - ./tempo/tempo-config.yml:/etc/tempo/tempo.yaml:ro
       - tempo_data:/var/tempo
@@ -116,34 +118,36 @@ services:
       - /sys:/host/sys:ro
       - /:/rootfs:ro
     command:
-      - '--path.procfs=/host/proc'
-      - '--path.sysfs=/host/sys'
-      - '--path.rootfs=/rootfs'
-      - '--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)'
+      - "--path.procfs=/host/proc"
+      - "--path.sysfs=/host/sys"
+      - "--path.rootfs=/rootfs"
+      - "--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)"
     restart: unless-stopped
     networks:
       - observability
 
   # ==========================================
-  # EXPORTERS: ROCm GPU Exporter (AMD GPU)
+  # EXPORTERS: NVIDIA DCGM Exporter (NVIDIA GPU)
   # ==========================================
-  rocm-exporter:
-    build:
-      context: ./exporters
-      dockerfile: Dockerfile.rocm
-    container_name: rocm-exporter
-    ports:
-      - "9102:9102"
-    devices:
-      - /dev/kfd:/dev/kfd
-      - /dev/dri:/dev/dri
-    group_add:
-      - "44"    # video group
-      - "992"   # render group
-    volumes:
-      - /opt/rocm-6.3.0:/opt/rocm-6.3.0:ro
+  dcgm-exporter:
+    image: nvidia/dcgm-exporter:latest
+    container_name: dcgm-exporter
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    cap_add:
+      - SYS_ADMIN
+    privileged: true
     environment:
-      - ROCM_SMI_PATH=/opt/rocm-6.3.0/bin/rocm-smi
+      - NVIDIA_VISIBLE_DEVICES=all
+      - NVIDIA_DRIVER_CAPABILITIES=compute,utility
+    entrypoint: ["/bin/sh", "-c", "nv-hostengine -n & sleep 5 && dcgm-exporter"]
+    ports:
+      - "9400:9400"
     restart: unless-stopped
     networks:
       - observability

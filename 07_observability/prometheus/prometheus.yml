@@ -39,14 +39,14 @@ scrape_configs:
           instance: 'localhost'
 
   # ==========================================
-  # GPU Metrics (ROCm Exporter)
+  # GPU Metrics (NVIDIA DCGM Exporter)
   # ==========================================
-  - job_name: 'rocm-gpu'
+  - job_name: 'nvidia-gpu'
     static_configs:
-      - targets: ['rocm-exporter:9102']
+      - targets: ['dcgm-exporter:9400']
         labels:
           instance: 'localhost'
-          gpu_type: 'amd'
+          gpu_type: 'nvidia'
     scrape_interval: 2s  # More frequent for GPU monitoring
 
   # ==========================================
@@ -58,6 +58,27 @@ scrape_configs:
         labels:
           instance: 'localhost'
     scrape_interval: 5s
+
+
+  # ==========================================
+  # vLLM Inference Metrics
+  # ==========================================
+  - job_name: 'vllm'
+    static_configs:
+      - targets: ['host.docker.internal:8000']
+        labels:
+          instance: 'vllm-server'
+    scrape_interval: 2s
+
+  # ==========================================
+  # TGI Inference Metrics
+  # ==========================================
+  - job_name: 'tgi'
+    static_configs:
+      - targets: ['host.docker.internal:8080']
+        labels:
+          instance: 'tgi-server'
+    scrape_interval: 2s
 
   # ==========================================
   # Tempo (Traces) Metrics

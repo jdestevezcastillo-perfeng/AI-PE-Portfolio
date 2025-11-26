@@ -65,7 +65,7 @@ def get_rocm_metrics():
         '--showuse',
         '--showpower',
         '--showmeminfo', 'vram',
-        '--showclkfrq',
+        '--showclocks',
         '--showfan',
         '--showmemuse',
         '--showvoltage',
@@ -155,12 +155,12 @@ def get_rocm_metrics():
         # ==========================================
 
         # Shader/Graphics clock
-        sclk = re.search(r'sclk clock level:\s*\d+:\s*(\d+)Mhz', output)
+        sclk = re.search(r'sclk clock level:\s*\d+:\s*\(?(\d+)Mhz\)?', output)
         if sclk:
             metrics.append(f'rocm_gpu_clock_graphics_mhz{{gpu="0"}} {sclk.group(1)}')
 
         # Memory clock
-        mclk = re.search(r'mclk clock level:\s*\d+:\s*(\d+)Mhz', output)
+        mclk = re.search(r'mclk clock level:\s*\d+:\s*\(?(\d+)Mhz\)?', output)
         if mclk:
             metrics.append(f'rocm_gpu_clock_memory_mhz{{gpu="0"}} {mclk.group(1)}')
 

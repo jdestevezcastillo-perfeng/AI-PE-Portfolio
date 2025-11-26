@@ -530,8 +530,8 @@
   "time": { "from": "now-15m", "to": "now" },
   "timepicker": {},
   "timezone": "",
-  "title": "AI Inference Metrics",
-  "uid": "ai-performance",
+  "title": "Ollama Inference Metrics",
+  "uid": "ollama-inference",
   "version": 1,
   "weekStart": ""
 }

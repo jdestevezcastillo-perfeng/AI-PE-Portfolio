@@ -108,6 +108,9 @@ fi
 echo "[*] Installing AutoGPTQ for $GPU_TYPE..."
 if [ "$GPU_TYPE" = "NVIDIA" ]; then
     pip install auto-gptq --no-build-isolation
+    
+    echo "[*] Installing vLLM for NVIDIA..."
+    pip install vllm
 elif [ "$GPU_TYPE" = "AMD" ]; then
     # AutoGPTQ on AMD can be tricky. Attempting standard install with ROCm torch present.
     echo "    Attempting AutoGPTQ install for ROCm (Experimental)..."

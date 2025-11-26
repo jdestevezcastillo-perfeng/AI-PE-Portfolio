@@ -2,3 +2,5 @@
 .claude/
 .vscode/
 archive/
+data/
+hf-token.txt    
