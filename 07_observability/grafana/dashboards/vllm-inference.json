@@ -943,6 +943,39 @@
         "regex": "",
         "skipUrlSync": false,
         "type": "datasource"
+      },
+      {
+        "current": {
+          "selected": true,
+          "text": "All",
+          "value": "$__all"
+        },
+        "description": "Filter by model name",
+        "hide": 0,
+        "includeAll": true,
+        "multi": true,
+        "name": "model",
+        "options": [
+          {
+            "selected": true,
+            "text": "All",
+            "value": "$__all"
+          },
+          {
+            "selected": false,
+            "text": "Llama-3.1-8B",
+            "value": ".*Llama-3.1-8B.*"
+          },
+          {
+            "selected": false,
+            "text": "Mistral-7B",
+            "value": ".*Mistral-7B.*"
+          }
+        ],
+        "query": "All,Llama-3.1-8B,Mistral-7B",
+        "queryValue": "",
+        "skipUrlSync": false,
+        "type": "custom"
       }
     ]
   },
@@ -952,7 +985,7 @@
   },
   "timepicker": {},
   "timezone": "",
-  "title": "vLLM Inference Metrics",
+  "title": "vLLM Inference Metrics (Multi-Model)",
   "uid": "vllm-inference",
   "version": 1,
   "weekStart": ""

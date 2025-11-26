@@ -3,4 +3,5 @@
 .vscode/
 archive/
 data/
-hf-token.txt    
+hf-token.txt 
+venv/   
