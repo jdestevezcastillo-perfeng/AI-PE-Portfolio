@@ -365,7 +365,7 @@ Open `http://localhost:3000` and verify metrics are flowing.
 
 Results are saved as JSON files in `benchmark_results/`:
 
-```
+```json
 benchmark_results/
 ├── vllm_Llama-3.1-8B-Instruct_c1_r50_TIMESTAMP.json
 ├── tgi_Mistral-7B-Instruct-v0.2_c5_r200_TIMESTAMP.json
@@ -407,10 +407,10 @@ Each file contains:
 
 ## 📚 Additional Resources
 
-- **vLLM Documentation**: https://docs.vllm.ai/
-- **TGI Documentation**: https://huggingface.co/docs/text-generation-inference/
-- **Prometheus**: https://prometheus.io/docs/
-- **Grafana**: https://grafana.com/docs/
+- **vLLM Documentation**: <https://docs.vllm.ai/>
+- **TGI Documentation**: <https://huggingface.co/docs/text-generation-inference/>
+- **Prometheus**: <https://prometheus.io/docs/>
+- **Grafana**: <https://grafana.com/docs/>
 
 ---
 
