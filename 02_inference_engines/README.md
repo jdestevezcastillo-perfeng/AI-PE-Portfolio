@@ -50,7 +50,7 @@ After smoke tests pass:
 
 - Open Grafana: `http://localhost:3000`
 - View dashboards with model filtering
-- Document findings in `BENCHMARK_RESULTS.md`
+- Document findings using `4_STAGE_RESULTS_TEMPLATE.md`
 
 ---
 
@@ -258,13 +258,14 @@ All dashboards now support **multi-model filtering**:
 |------|---------|
 | `README.md` | **This file** - Complete guide |
 | `BENCHMARK_PLAN.md` | Detailed execution plan with all commands |
-| `BENCHMARK_RESULTS.md` | Document your findings here |
+| `BENCHMARK_RESULTS.md` | Previous benchmark results (2-engine comparison) |
+| `FILE_STRUCTURE.md` | Directory organization guide |
 
 ### Templates
 
 | File | Purpose |
 |------|---------|
-| `4_STAGE_RESULTS_TEMPLATE.md` | Template for documenting results |
+| `4_STAGE_RESULTS_TEMPLATE.md` | Template for documenting your new findings |
 
 ---
 
@@ -322,8 +323,8 @@ Open `http://localhost:3000` and verify metrics are flowing.
 
 - View Grafana dashboards
 - Use model filter to compare configurations
-- Document findings in `BENCHMARK_RESULTS.md`
-- Use `4_STAGE_RESULTS_TEMPLATE.md` as a guide
+- Create a new results file using `4_STAGE_RESULTS_TEMPLATE.md` as a guide
+- See `BENCHMARK_RESULTS.md` for example of previous results
 
 ---
 

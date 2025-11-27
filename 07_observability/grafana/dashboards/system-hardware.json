@@ -955,7 +955,20 @@
             "stacking": { "group": "A", "mode": "none" },
             "thresholdsStyle": { "mode": "line" }
           },
-          "mappings": [],
+          "mappings": [
+            { "type": "regex", "options": { "pattern": "pci0000.*temp1", "result": { "text": "CPU - Tctl" } } },
+            { "type": "regex", "options": { "pattern": "pci0000.*temp3", "result": { "text": "CPU - Tdie" } } },
+            { "type": "regex", "options": { "pattern": "nvme.*temp1", "result": { "text": "NVMe - Composite" } } },
+            { "type": "regex", "options": { "pattern": "nvme.*temp2", "result": { "text": "NVMe - Sensor 1" } } },
+            { "type": "regex", "options": { "pattern": "nvme.*temp3", "result": { "text": "NVMe - Sensor 2" } } },
+            { "type": "regex", "options": { "pattern": "wmi.*temp1", "result": { "text": "Motherboard - Sensor 1" } } },
+            { "type": "regex", "options": { "pattern": "wmi.*temp2", "result": { "text": "Motherboard - Sensor 2" } } },
+            { "type": "regex", "options": { "pattern": "wmi.*temp3", "result": { "text": "Motherboard - Sensor 3" } } },
+            { "type": "regex", "options": { "pattern": "wmi.*temp4", "result": { "text": "Motherboard - Sensor 4" } } },
+            { "type": "regex", "options": { "pattern": "wmi.*temp5", "result": { "text": "Motherboard - Sensor 5" } } },
+            { "type": "regex", "options": { "pattern": "wmi.*temp6", "result": { "text": "Motherboard - Sensor 6" } } },
+            { "type": "regex", "options": { "pattern": "thermal.*", "result": { "text": "ACPI Thermal Zone" } } }
+          ],
           "thresholds": {
             "mode": "absolute",
             "steps": [
@@ -967,7 +980,7 @@
         },
         "overrides": []
       },
-      "gridPos": { "h": 7, "w": 12, "x": 0, "y": 52 },
+      "gridPos": { "h": 7, "w": 24, "x": 0, "y": 52 },
       "id": 18,
       "options": {
         "legend": { "calcs": ["mean", "max"], "displayMode": "table", "placement": "bottom", "showLegend": true },
@@ -977,7 +990,7 @@
       "targets": [
         {
           "datasource": { "type": "prometheus", "uid": "${datasource}" },
-          "expr": "node_hwmon_temp_celsius",
+          "expr": "avg by (chip, sensor) (node_hwmon_temp_celsius)",
           "legendFormat": "{{chip}} - {{sensor}}",
           "refId": "A"
         }
@@ -1025,7 +1038,7 @@
       "targets": [
         {
           "datasource": { "type": "prometheus", "uid": "${datasource}" },
-          "expr": "node_hwmon_fan_rpm",
+          "expr": "avg by (sensor, chip) (node_hwmon_fan_rpm)",
           "legendFormat": "{{chip}} - {{sensor}}",
           "refId": "A"
         }
@@ -1038,7 +1051,20 @@
       "fieldConfig": {
         "defaults": {
           "color": { "mode": "thresholds" },
-          "mappings": [],
+          "mappings": [
+            { "type": "regex", "options": { "pattern": "pci0000.*temp1", "result": { "text": "CPU - Tctl" } } },
+            { "type": "regex", "options": { "pattern": "pci0000.*temp3", "result": { "text": "CPU - Tdie" } } },
+            { "type": "regex", "options": { "pattern": "nvme.*temp1", "result": { "text": "NVMe - Composite" } } },
+            { "type": "regex", "options": { "pattern": "nvme.*temp2", "result": { "text": "NVMe - Sensor 1" } } },
+            { "type": "regex", "options": { "pattern": "nvme.*temp3", "result": { "text": "NVMe - Sensor 2" } } },
+            { "type": "regex", "options": { "pattern": "wmi.*temp1", "result": { "text": "Motherboard - Sensor 1" } } },
+            { "type": "regex", "options": { "pattern": "wmi.*temp2", "result": { "text": "Motherboard - Sensor 2" } } },
+            { "type": "regex", "options": { "pattern": "wmi.*temp3", "result": { "text": "Motherboard - Sensor 3" } } },
+            { "type": "regex", "options": { "pattern": "wmi.*temp4", "result": { "text": "Motherboard - Sensor 4" } } },
+            { "type": "regex", "options": { "pattern": "wmi.*temp5", "result": { "text": "Motherboard - Sensor 5" } } },
+            { "type": "regex", "options": { "pattern": "wmi.*temp6", "result": { "text": "Motherboard - Sensor 6" } } },
+            { "type": "regex", "options": { "pattern": "thermal.*", "result": { "text": "ACPI Thermal Zone" } } }
+          ],
           "thresholds": {
             "mode": "absolute",
             "steps": [
@@ -1052,7 +1078,7 @@
         },
         "overrides": []
       },
-      "gridPos": { "h": 6, "w": 12, "x": 0, "y": 59 },
+      "gridPos": { "h": 6, "w": 24, "x": 0, "y": 59 },
       "id": 20,
       "options": {
         "colorMode": "background",
@@ -1066,8 +1092,8 @@
       "targets": [
         {
           "datasource": { "type": "prometheus", "uid": "${datasource}" },
-          "expr": "node_hwmon_temp_celsius",
-          "legendFormat": "{{sensor}}",
+          "expr": "avg by (chip, sensor) (node_hwmon_temp_celsius)",
+          "legendFormat": "{{chip}} - {{sensor}}",
           "refId": "A"
         }
       ],
@@ -1090,7 +1116,7 @@
         },
         "overrides": []
       },
-      "gridPos": { "h": 6, "w": 12, "x": 12, "y": 59 },
+      "gridPos": { "h": 6, "w": 24, "x": 0, "y": 65 },
       "id": 21,
       "options": {
         "colorMode": "background",
@@ -1104,7 +1130,7 @@
       "targets": [
         {
           "datasource": { "type": "prometheus", "uid": "${datasource}" },
-          "expr": "node_hwmon_fan_rpm",
+          "expr": "avg by (sensor) (node_hwmon_fan_rpm)",
           "legendFormat": "{{sensor}}",
           "refId": "A"
         }

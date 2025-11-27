@@ -42,7 +42,11 @@
       "id": 1,
       "options": {
         "orientation": "auto",
-        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "reduceOptions": {
+          "calcs": ["lastNotNull"],
+          "fields": "",
+          "values": false
+        },
         "showThresholdLabels": false,
         "showThresholdMarkers": true
       },
@@ -50,12 +54,58 @@
       "targets": [
         {
           "datasource": { "type": "prometheus", "uid": "${datasource}" },
-          "expr": "DCGM_FI_DEV_GPU_TEMP{gpu=\"0\"}",
+          "expr": "avg(DCGM_FI_DEV_GPU_TEMP{gpu=\"0\"})",
           "legendFormat": "GPU Temp",
           "refId": "A"
         }
       ],
       "title": "GPU Temperature",
+      "type": "gauge"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "mappings": [],
+          "max": 100,
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "blue", "value": null },
+              { "color": "green", "value": 20 },
+              { "color": "#EAB839", "value": 60 },
+              { "color": "orange", "value": 80 },
+              { "color": "red", "value": 95 }
+            ]
+          },
+          "unit": "percent"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 6, "w": 6, "x": 6, "y": 1 },
+      "id": 2,
+      "options": {
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": ["lastNotNull"],
+          "fields": "",
+          "values": false
+        },
+        "showThresholdLabels": false,
+        "showThresholdMarkers": true
+      },
+      "pluginVersion": "10.2.2",
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "${datasource}" },
+          "expr": "avg(DCGM_FI_DEV_FAN_SPEED{gpu=\"0\"})",
+          "legendFormat": "Fan Speed",
+          "refId": "A"
+        }
+      ],
+      "title": "GPU Fan Speed %",
       "type": "gauge"
     },
     {
@@ -97,7 +147,12 @@
       "gridPos": { "h": 6, "w": 12, "x": 12, "y": 1 },
       "id": 4,
       "options": {
-        "legend": { "calcs": ["mean", "max"], "displayMode": "table", "placement": "bottom", "showLegend": true },
+        "legend": {
+          "calcs": ["mean", "max"],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
         "tooltip": { "mode": "multi", "sort": "none" }
       },
       "pluginVersion": "10.2.2",
@@ -145,7 +200,11 @@
       "id": 5,
       "options": {
         "orientation": "auto",
-        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "reduceOptions": {
+          "calcs": ["lastNotNull"],
+          "fields": "",
+          "values": false
+        },
         "showThresholdLabels": false,
         "showThresholdMarkers": true
       },
@@ -153,7 +212,7 @@
       "targets": [
         {
           "datasource": { "type": "prometheus", "uid": "${datasource}" },
-          "expr": "DCGM_FI_DEV_GPU_UTIL{gpu=\"0\"}",
+          "expr": "avg(DCGM_FI_DEV_GPU_UTIL{gpu=\"0\"})",
           "legendFormat": "GPU",
           "refId": "A"
         }
@@ -186,7 +245,11 @@
       "id": 6,
       "options": {
         "orientation": "auto",
-        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "reduceOptions": {
+          "calcs": ["lastNotNull"],
+          "fields": "",
+          "values": false
+        },
         "showThresholdLabels": false,
         "showThresholdMarkers": true
       },
@@ -194,7 +257,7 @@
       "targets": [
         {
           "datasource": { "type": "prometheus", "uid": "${datasource}" },
-          "expr": "DCGM_FI_DEV_MEM_COPY_UTIL{gpu=\"0\"}",
+          "expr": "avg(DCGM_FI_DEV_MEM_COPY_UTIL{gpu=\"0\"})",
           "legendFormat": "Memory Copy",
           "refId": "A"
         }
@@ -227,7 +290,11 @@
       "id": 7,
       "options": {
         "orientation": "auto",
-        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "reduceOptions": {
+          "calcs": ["lastNotNull"],
+          "fields": "",
+          "values": false
+        },
         "showThresholdLabels": false,
         "showThresholdMarkers": true
       },
@@ -235,7 +302,7 @@
       "targets": [
         {
           "datasource": { "type": "prometheus", "uid": "${datasource}" },
-          "expr": "DCGM_FI_DEV_POWER_USAGE{gpu=\"0\"}",
+          "expr": "avg(DCGM_FI_DEV_POWER_USAGE{gpu=\"0\"})",
           "legendFormat": "Power",
           "refId": "A"
         }
@@ -268,20 +335,31 @@
             "thresholdsStyle": { "mode": "off" }
           },
           "mappings": [],
-          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }] },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [{ "color": "green", "value": null }]
+          },
           "unit": "percent"
         },
         "overrides": [
           {
             "matcher": { "id": "byName", "options": "Power" },
-            "properties": [{ "id": "unit", "value": "watt" }, { "id": "custom.axisPlacement", "value": "right" }]
+            "properties": [
+              { "id": "unit", "value": "watt" },
+              { "id": "custom.axisPlacement", "value": "right" }
+            ]
           }
         ]
       },
       "gridPos": { "h": 6, "w": 6, "x": 18, "y": 8 },
       "id": 8,
       "options": {
-        "legend": { "calcs": ["mean", "max"], "displayMode": "table", "placement": "bottom", "showLegend": true },
+        "legend": {
+          "calcs": ["mean", "max"],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
         "tooltip": { "mode": "multi", "sort": "none" }
       },
       "pluginVersion": "10.2.2",
@@ -335,7 +413,11 @@
       "id": 9,
       "options": {
         "orientation": "auto",
-        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "reduceOptions": {
+          "calcs": ["lastNotNull"],
+          "fields": "",
+          "values": false
+        },
         "showThresholdLabels": false,
         "showThresholdMarkers": true
       },
@@ -343,7 +425,7 @@
       "targets": [
         {
           "datasource": { "type": "prometheus", "uid": "${datasource}" },
-          "expr": "DCGM_FI_DEV_FB_USED{gpu=\"0\"} * 1048576",
+          "expr": "avg(DCGM_FI_DEV_FB_USED{gpu=\"0\"} * 1048576)",
           "legendFormat": "Used",
           "refId": "A"
         }
@@ -376,7 +458,11 @@
       "id": 10,
       "options": {
         "orientation": "auto",
-        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "reduceOptions": {
+          "calcs": ["lastNotNull"],
+          "fields": "",
+          "values": false
+        },
         "showThresholdLabels": false,
         "showThresholdMarkers": true
       },
@@ -384,7 +470,7 @@
       "targets": [
         {
           "datasource": { "type": "prometheus", "uid": "${datasource}" },
-          "expr": "(DCGM_FI_DEV_FB_USED{gpu=\"0\"} / (DCGM_FI_DEV_FB_USED{gpu=\"0\"} + DCGM_FI_DEV_FB_FREE{gpu=\"0\"})) * 100",
+          "expr": "avg((DCGM_FI_DEV_FB_USED{gpu=\"0\"} / (DCGM_FI_DEV_FB_USED{gpu=\"0\"} + DCGM_FI_DEV_FB_FREE{gpu=\"0\"})) * 100)",
           "legendFormat": "VRAM %",
           "refId": "A"
         }
@@ -417,7 +503,10 @@
             "thresholdsStyle": { "mode": "off" }
           },
           "mappings": [],
-          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }] },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [{ "color": "green", "value": null }]
+          },
           "unit": "bytes"
         },
         "overrides": []
@@ -425,7 +514,12 @@
       "gridPos": { "h": 6, "w": 8, "x": 16, "y": 15 },
       "id": 11,
       "options": {
-        "legend": { "calcs": ["mean", "max"], "displayMode": "table", "placement": "bottom", "showLegend": true },
+        "legend": {
+          "calcs": ["mean", "max"],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
         "tooltip": { "mode": "multi", "sort": "none" }
       },
       "pluginVersion": "10.2.2",
@@ -471,7 +565,10 @@
             "thresholdsStyle": { "mode": "off" }
           },
           "mappings": [],
-          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }] },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [{ "color": "green", "value": null }]
+          },
           "unit": "hertz"
         },
         "overrides": []
@@ -479,7 +576,12 @@
       "gridPos": { "h": 6, "w": 24, "x": 0, "y": 21 },
       "id": 12,
       "options": {
-        "legend": { "calcs": ["mean", "max"], "displayMode": "table", "placement": "bottom", "showLegend": true },
+        "legend": {
+          "calcs": ["mean", "max"],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
         "tooltip": { "mode": "multi", "sort": "none" }
       },
       "pluginVersion": "10.2.2",
@@ -508,7 +610,11 @@
   "templating": {
     "list": [
       {
-        "current": { "selected": false, "text": "Prometheus", "value": "Prometheus" },
+        "current": {
+          "selected": false,
+          "text": "Prometheus",
+          "value": "Prometheus"
+        },
         "hide": 0,
         "includeAll": false,
         "multi": false,
